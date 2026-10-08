@@ -48,10 +48,8 @@ class GameBoard extends ConsumerWidget {
 
         final pointer = box.globalToLocal(details.offset);
         final piece = details.data.definition;
-        // Piece is centered horizontally and sits above the finger (0.5 cell gap).
-        // Mirror the feedbackOffset used in piece_tray.dart.
         final rawCol = ((pointer.dx - piece.colSpan * cellSize / 2) / cellSize).round();
-        final rawRow = ((pointer.dy - piece.rowSpan * cellSize - cellSize * 0.5) / cellSize).round();
+        final rawRow = ((pointer.dy - piece.rowSpan * cellSize - cellSize * 2.0) / cellSize).round();
         final col = rawCol.clamp(0, 10 - piece.colSpan);
         final row = rawRow.clamp(0, 13 - piece.rowSpan);
         notifier.updateGhost(trayIndex, row, col);

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'piece_instance.dart';
+import 'level_definition.dart';
 
-enum GameStatus { playing, gameOver }
+enum GameStatus { playing, gameOver, levelComplete }
 
 class GameState {
-  final List<List<Color?>> grid; // 10×10, null = empty
-  final List<PieceInstance?> tray; // 3 slots, null = empty slot
+  final List<List<Color?>> grid;
+  final List<PieceInstance?> tray;
   final int score;
   final int bestScore;
   final GameStatus status;
-  final (int, int)? ghostAnchor; // (row, col) where ghost piece top-left would land
-  final int? ghostTrayIndex; // which tray piece is being dragged
-  final Set<(int, int)> clearingCells; // cells mid-clear animation
+  final (int, int)? ghostAnchor;
+  final int? ghostTrayIndex;
+  final Set<(int, int)> clearingCells;
+  final LevelDefinition? currentLevel; // null = endless mode
 
   const GameState({
     required this.grid,
@@ -22,6 +24,7 @@ class GameState {
     this.ghostAnchor,
     this.ghostTrayIndex,
     this.clearingCells = const {},
+    this.currentLevel,
   });
 
   GameState copyWith({
@@ -41,6 +44,7 @@ class GameState {
       ghostAnchor: ghostAnchor,
       ghostTrayIndex: ghostTrayIndex,
       clearingCells: clearingCells ?? this.clearingCells,
+      currentLevel: currentLevel,
     );
   }
 
@@ -54,6 +58,7 @@ class GameState {
       clearingCells: clearingCells,
       ghostAnchor: anchor,
       ghostTrayIndex: trayIndex,
+      currentLevel: currentLevel,
     );
   }
 }

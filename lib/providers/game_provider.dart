@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/game_state.dart';
 import '../models/piece_instance.dart';
+import '../models/level_definition.dart';
 import '../logic/piece_catalog.dart';
 import '../logic/placement_checker.dart';
 import '../logic/line_clear_engine.dart';
@@ -46,6 +47,16 @@ class GameNotifier extends StateNotifier<GameState> {
     );
   }
 
+  void startLevel(LevelDefinition level) {
+    state = GameState(
+      grid: _emptyGrid(),
+      tray: _pickThree(),
+      score: 0,
+      bestScore: state.bestScore,
+      currentLevel: level,
+    );
+  }
+
   List<PieceInstance?> _pickThree() {
     return List.generate(3, (i) {
       final def = pieceCatalog[_rng.nextInt(pieceCatalog.length)];
@@ -56,7 +67,6 @@ class GameNotifier extends StateNotifier<GameState> {
     });
   }
 
-  // Called while dragging over the grid
   void updateGhost(int trayIndex, int row, int col) {
     if (state.ghostAnchor == (row, col) &&
         state.ghostTrayIndex == trayIndex) {
@@ -74,6 +84,9 @@ class GameNotifier extends StateNotifier<GameState> {
     final piece = state.tray[trayIndex];
     if (piece == null || piece.isPlaced) return;
     if (!canPlace(state.grid, piece.definition, row, col)) return;
+    if (state.status == GameStatus.levelComplete) return;
+
+    final currentLevel = state.currentLevel;
 
     // 1. Place piece on grid
     var newGrid = placeOnGrid(state.grid, piece.definition, row, col);
@@ -94,36 +107,46 @@ class GameNotifier extends StateNotifier<GameState> {
     final newScore = state.score + delta;
     final newBest = max(newScore, state.bestScore);
 
-    // 5. Clear lines if any
+    // 5. Animate line clears
     if (clearing.isNotEmpty) {
-      // Flash clearing cells briefly then remove
       state = GameState(
         grid: newGrid,
         tray: newTray,
         score: newScore,
         bestScore: newBest,
         clearingCells: clearing,
+        currentLevel: currentLevel,
       );
       await Future.delayed(const Duration(milliseconds: 300));
       newGrid = clearCells(newGrid, clearing);
     }
 
-    // 6. Check if all 3 tray slots are now placed → refill
+    // 6. Refill tray if all slots used
     final allPlaced = newTray.every((p) => p == null || p.isPlaced);
     final finalTray = allPlaced ? _pickThree() : newTray;
 
-    // 7. Check game over: none of the remaining pieces fit anywhere
-    final activePieces = finalTray.whereType<PieceInstance>().where((p) => !p.isPlaced);
-    final isGameOver = activePieces.isNotEmpty &&
-        activePieces.every(
-            (p) => !hasAnyValidPlacement(newGrid, p.definition));
+    // 7. Check level complete (score target reached)
+    final isLevelComplete =
+        currentLevel != null && newScore >= currentLevel.star1;
+
+    // 8. Check game over (only if level not complete)
+    final activePieces =
+        finalTray.whereType<PieceInstance>().where((p) => !p.isPlaced);
+    final isGameOver = !isLevelComplete &&
+        activePieces.isNotEmpty &&
+        activePieces.every((p) => !hasAnyValidPlacement(newGrid, p.definition));
 
     state = GameState(
       grid: newGrid,
       tray: finalTray,
       score: newScore,
       bestScore: newBest,
-      status: isGameOver ? GameStatus.gameOver : GameStatus.playing,
+      currentLevel: currentLevel,
+      status: isLevelComplete
+          ? GameStatus.levelComplete
+          : isGameOver
+              ? GameStatus.gameOver
+              : GameStatus.playing,
     );
 
     final prefs = await SharedPreferences.getInstance();

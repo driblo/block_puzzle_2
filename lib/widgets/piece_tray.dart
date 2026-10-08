@@ -42,39 +42,41 @@ class _TraySlot extends StatelessWidget {
     final slotSize = cellSize * 5;
 
     if (piece == null || piece!.isPlaced) {
-      return SizedBox(width: slotSize, height: slotSize);
+      return SizedBox(width: slotSize, height: slotSize + cellSize * 2);
     }
 
     final def = piece!.definition;
 
-    // Piece appears centered horizontally and fully above the finger.
-    // Uses board cell size so the ghost and feedback are in the same units.
     final feedbackOffset = Offset(
       -def.colSpan * boardCellSize / 2,
-      -def.rowSpan * boardCellSize - boardCellSize * 0.5,
+      -def.rowSpan * boardCellSize - boardCellSize * 2.0,
     );
 
-    return Draggable<PieceInstance>(
-      data: piece,
-      dragAnchorStrategy: pointerDragAnchorStrategy,
-      feedbackOffset: feedbackOffset,
-      feedback: Material(
-        color: Colors.transparent,
-        child: PieceWidget(
-          definition: def,
-          cellSize: boardCellSize,
-          opacity: 0.9,
-        ),
-      ),
-      childWhenDragging: SizedBox(
-        width: slotSize,
-        height: slotSize + cellSize * 2, // extra bottom touch area
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: slotSize,
-            height: slotSize,
-            child: Center(
+    // Outer SizedBox reserves layout space; Draggable wraps only the piece
+    // so the sensitive area is exactly the piece bounding box.
+    return SizedBox(
+      width: slotSize,
+      height: slotSize + cellSize * 2,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Draggable<PieceInstance>(
+          data: piece,
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedbackOffset: feedbackOffset,
+          feedback: Material(
+            color: Colors.transparent,
+            child: PieceWidget(
+              definition: def,
+              cellSize: boardCellSize,
+              opacity: 0.9,
+            ),
+          ),
+          childWhenDragging: Container(
+            width: def.colSpan * cellSize,
+            height: slotSize + cellSize * 2,
+            decoration: const BoxDecoration(),
+            child: Align(
+              alignment: Alignment.topCenter,
               child: PieceWidget(
                 definition: def,
                 cellSize: cellSize,
@@ -82,17 +84,12 @@ class _TraySlot extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-      child: SizedBox(
-        width: slotSize,
-        height: slotSize + cellSize * 2, // extra bottom touch area
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: slotSize,
-            height: slotSize,
-            child: Center(
+          child: Container(
+            width: def.colSpan * cellSize,
+            height: slotSize + cellSize * 2,
+            decoration: const BoxDecoration(),
+            child: Align(
+              alignment: Alignment.topCenter,
               child: PieceWidget(
                 definition: def,
                 cellSize: cellSize,

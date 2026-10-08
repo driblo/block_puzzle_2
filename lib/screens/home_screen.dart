@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'game_screen.dart';
+import 'level_map_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -33,10 +34,33 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 60),
-            _PlayButton(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GameScreen()),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _HomeButton(
+                  label: 'LEVELS',
+                  icon: Icons.map_outlined,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFACC15), Color(0xFFF97316)],
+                  ),
+                  glowColor: const Color(0xFFFACC15),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LevelMapScreen()),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                _HomeButton(
+                  label: 'ENDLESS',
+                  icon: Icons.all_inclusive,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF818CF8), Color(0xFFC084FC)],
+                  ),
+                  glowColor: const Color(0xFF818CF8),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const GameScreen()),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -45,15 +69,26 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _PlayButton extends StatefulWidget {
+class _HomeButton extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final LinearGradient gradient;
+  final Color glowColor;
   final VoidCallback onTap;
-  const _PlayButton({required this.onTap});
+
+  const _HomeButton({
+    required this.label,
+    required this.icon,
+    required this.gradient,
+    required this.glowColor,
+    required this.onTap,
+  });
 
   @override
-  State<_PlayButton> createState() => _PlayButtonState();
+  State<_HomeButton> createState() => _HomeButtonState();
 }
 
-class _PlayButtonState extends State<_PlayButton>
+class _HomeButtonState extends State<_HomeButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _scale;
@@ -81,28 +116,34 @@ class _PlayButtonState extends State<_PlayButton>
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 18),
+          width: 130,
+          padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF818CF8), Color(0xFFC084FC)],
-            ),
-            borderRadius: BorderRadius.circular(40),
+            gradient: widget.gradient,
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF818CF8).withAlpha(100),
+                color: widget.glowColor.withAlpha(100),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: Text(
-            'PLAY',
-            style: GoogleFonts.nunito(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 3,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, color: Colors.white, size: 28),
+              const SizedBox(height: 6),
+              Text(
+                widget.label,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
           ),
         ),
       ),
